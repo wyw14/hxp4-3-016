@@ -1,6 +1,7 @@
 import { Game } from './game';
 import type { LevelData } from './types';
 import { healthCheck } from './api';
+import { accessibilityManager } from './accessibility';
 
 const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
 const game = new Game(canvas);
@@ -21,7 +22,69 @@ const btnReset = document.getElementById('btn-reset') as HTMLButtonElement;
 const btnHint = document.getElementById('btn-hint') as HTMLButtonElement;
 const btnNext = document.getElementById('btn-next') as HTMLButtonElement;
 
+const accessibilityBtn = document.getElementById('accessibility-btn') as HTMLButtonElement;
+const accessibilityPanel = document.getElementById('accessibility-panel') as HTMLDivElement;
+const toggleHighContrast = document.getElementById('toggle-highContrast') as HTMLDivElement;
+const toggleColorBlind = document.getElementById('toggle-colorBlindFriendly') as HTMLDivElement;
+const toggleReduceRotation = document.getElementById('toggle-reduceRotation') as HTMLDivElement;
+const toggleReduceFlicker = document.getElementById('toggle-reduceFlicker') as HTMLDivElement;
+
 const MAX_LEVELS = 3;
+
+function updateToggleUI(): void {
+  const settings = accessibilityManager.getSettings();
+  toggleHighContrast.classList.toggle('active', settings.highContrast);
+  toggleColorBlind.classList.toggle('active', settings.colorBlindFriendly);
+  toggleReduceRotation.classList.toggle('active', settings.reduceRotation);
+  toggleReduceFlicker.classList.toggle('active', settings.reduceFlicker);
+}
+
+function applyAccessibilitySettings(): void {
+  const settings = accessibilityManager.getSettings();
+  game.setAccessibility(settings);
+  updateToggleUI();
+}
+
+accessibilityBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  accessibilityPanel.classList.toggle('show');
+});
+
+document.addEventListener('click', (e) => {
+  if (!accessibilityPanel.contains(e.target as Node) && e.target !== accessibilityBtn) {
+    accessibilityPanel.classList.remove('show');
+  }
+});
+
+toggleHighContrast.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const current = accessibilityManager.getSettings().highContrast;
+  accessibilityManager.set('highContrast', !current);
+});
+
+toggleColorBlind.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const current = accessibilityManager.getSettings().colorBlindFriendly;
+  accessibilityManager.set('colorBlindFriendly', !current);
+});
+
+toggleReduceRotation.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const current = accessibilityManager.getSettings().reduceRotation;
+  accessibilityManager.set('reduceRotation', !current);
+});
+
+toggleReduceFlicker.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const current = accessibilityManager.getSettings().reduceFlicker;
+  accessibilityManager.set('reduceFlicker', !current);
+});
+
+accessibilityManager.subscribe(() => {
+  applyAccessibilitySettings();
+});
+
+applyAccessibilitySettings();
 
 game.setCallbacks({
   onLevelChange: (level: LevelData) => {

@@ -87,3 +87,10 @@ export interface VerifyResult {
   frequencies?: Record<string, number>;
   ratio?: [number, number] | null;
 }
+
+export interface AccessibilitySettings {
+  highContrast: boolean;
+  colorBlindFriendly: boolean;
+  reduceRotation: boolean;
+  reduceFlicker: boolean;
+}

@@ -6,7 +6,8 @@ import type {
   ScreenPoint,
   CurvePoint,
   BackgroundStar,
-  LevelData
+  LevelData,
+  AccessibilitySettings
 } from './types';
 import { Renderer } from './renderer';
 import { getLevel, verifyEdge } from './api';
@@ -21,6 +22,13 @@ import {
 const SNAP_DISTANCE = 35;
 const SAMPLE_INTERVAL = 16;
 
+const DEFAULT_ACCESSIBILITY: AccessibilitySettings = {
+  highContrast: false,
+  colorBlindFriendly: false,
+  reduceRotation: false,
+  reduceFlicker: false
+};
+
 export class Game {
   private canvas: HTMLCanvasElement;
   private renderer: Renderer;
@@ -30,6 +38,7 @@ export class Game {
   private animationFrameId: number = 0;
   private listeners: Array<() => void> = [];
   private completionTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private accessibility: AccessibilitySettings = { ...DEFAULT_ACCESSIBILITY };
 
   private onLevelChange?: (level: LevelData) => void;
   private onProgressChange?: (current: number, total: number) => void;
@@ -54,6 +63,11 @@ export class Game {
 
     this.resize();
     this.bindEvents();
+  }
+
+  setAccessibility(settings: AccessibilitySettings): void {
+    this.accessibility = { ...settings };
+    this.renderer.setAccessibility(settings);
   }
 
   private createEmptyDrawState(): DrawState {
@@ -412,7 +426,8 @@ export class Game {
     this.state.time += delta;
 
     if (this.state.levelData) {
-      this.state.rotationOffset += this.state.levelData.rotationSpeed * delta * 60;
+      const rotationMultiplier = this.accessibility.reduceRotation ? 0.2 : 1;
+      this.state.rotationOffset += this.state.levelData.rotationSpeed * delta * 60 * rotationMultiplier;
     }
 
     this.state.connections.forEach(c => {
